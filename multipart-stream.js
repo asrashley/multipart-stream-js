@@ -46,8 +46,7 @@ function getBoundary(contentType) {
   if (i == -1) {
     return null;
   }
-  const suffix = contentType.substring(i + BOUNDARY_PARAM.length);
-  return encoder.encode('--' + suffix + '\r\n');
+  return contentType.substring(i + BOUNDARY_PARAM.length);
 }
 
 /**
@@ -62,13 +61,14 @@ export default function multipartStream(contentType, body) {
   return new ReadableStream({
     async start(controller) {
       // Define the boundary.
-
-      const boundary = getBoundary(contentType);
-      if (boundary === null) {
+      const boundaryStr = getBoundary(contentType);
+      if (boundaryStr === null) {
         controller.error(Error('Invalid content type for multipart stream: ' +
                                contentType));
         return;
       }
+      const midBoundary = encoder.encode('--' + boundaryStr + '\r\n');
+      const endBoundary = encoder.encode('--' + boundaryStr + '--');
       let pos = 0;
       let buf = new Uint8Array(); // buf.slice(pos) has unprocessed data.
       let state = STATE_BOUNDARY;
@@ -91,15 +91,22 @@ export default function multipartStream(contentType, body) {
               }
 
               // Check that it starts with a boundary.
-              if (buf.length < pos + boundary.length) {
+              if (buf.length < pos + midBoundary.length) {
                 return;
               }
 
-              if (!compareArrays(buf.slice(pos, pos + boundary.length),
-                  boundary)) {
+              if (!compareArrays(buf.slice(pos, pos + midBoundary.length),
+                  midBoundary)) {
+                if (compareArrays(buf.slice(pos, pos + endBoundary.length),
+                    endBoundary)) {
+                  /* end of file boundary */
+                  state = STATE_BOUNDARY;
+                  pos += endBoundary.length;
+                  return;
+                }
                 throw new Error('bad part boundary');
               }
-              pos += boundary.length;
+              pos += midBoundary.length;
               state = STATE_HEADERS;
               headers = new Headers();
               break;
