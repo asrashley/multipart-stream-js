@@ -28,6 +28,18 @@ Content-Length: ${PART2.length}\r
 \r
 ${PART2}`;
 
+const STREAM_3_PARTS = `--boundary\r
+Part1-Header: h1\r
+Content-Length: ${PART1.length}\r
+\r
+${PART1}\r
+--boundary\r
+Part2-Header: h2\r
+Content-Length: ${PART2.length}\r
+\r
+${PART2}\r
+--boundary--\r\n`;
+
 /**
  * @param {Array<Uint8Array>} chunks
  * @return {ReadableStream} a stream which yields chunks.
@@ -89,6 +101,28 @@ describe('multipartStream', function() {
   it('reads parts from many chunks', async function() {
     const chunks = [];
     for (const c of STREAM_2_PARTS) {
+      chunks.push(encoder.encode(c));
+    }
+    const inStream = fakeSuccessfulStream(chunks);
+    const r = multipartStream('multipart/mixed; boundary=boundary', inStream)
+        .getReader();
+    {
+      const {done, value} = await r.read();
+      expect(done).toBe(false);
+      expect(value.headers.get('Part1-Header')).toEqual('h1');
+      expect(decoder.decode(value.body)).toEqual(PART1);
+    }
+    {
+      const {done, value} = await r.read();
+      expect(done).toBe(false);
+      expect(value.headers.get('Part2-Header')).toEqual('h2');
+      expect(decoder.decode(value.body)).toEqual(PART2);
+    }
+    expect(await r.read()).toEqual({done: true, value: undefined});
+  });
+  it('reads parts from many chunks with an end marker', async function() {
+    const chunks = [];
+    for (const c of STREAM_3_PARTS) {
       chunks.push(encoder.encode(c));
     }
     const inStream = fakeSuccessfulStream(chunks);
