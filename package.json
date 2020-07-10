@@ -1,6 +1,6 @@
 {
-  "name": "@slamb/multipart-stream",
-  "version": "1.0.0",
+  "name": "@asrashley/multipart-stream",
+  "version": "1.0.1",
   "description": "multipart stream parser",
   "main": "multipart-stream.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scottlamb/multiparse-parse-js.git"
+    "url": "git+https://github.com/asrashley/multipart-stream-js.git"
   },
   "keywords": [
     "multipart stream",
@@ -19,12 +19,21 @@
     "WHATWG Streams",
     "WHATWG Fetch"
   ],
-  "author": "Scott Lamb <slamb@slamb.org>",
+  "contributors": [
+    {
+      "name": "Scott Lamb",
+      "email": "slamb@slamb.org"
+    },
+    {
+      "name": "Alex Ashley",
+      "email": "github@ashley-family.net"
+    }
+  ],
   "license": "MIT OR Apache-2.0",
   "bugs": {
-    "url": "https://github.com/scottlamb/multiparse-parse-js/issues"
+    "url": "https://github.com/asrashley/multipart-stream-js/issues"
   },
-  "homepage": "https://github.com/scottlamb/multiparse-parse-js#readme",
+  "homepage": "https://github.com/asrashley/multipart-stream-js#readme",
   "devDependencies": {
     "eslint": "^6.8.0",
     "eslint-config-google": "^0.14.0",
