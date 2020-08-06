@@ -40,6 +40,19 @@ Content-Length: ${PART2.length}\r
 ${PART2}\r
 --boundary--\r\n`;
 
+const JSON_PAYLOAD = '{"added": {"User": 0, "Directory": 0, "Song": 0, "Track": 0, "BingoTicket": 0, '+
+'"Game": 0}, "errors": [], "text": "Game \"20-04-24-4\" is aleady in the database", ' +
+'"pct": 100.0, "phase": 1, "numPhases": 1, "done": true, "success": false}';
+
+const MULTIPART_EXAMPLE = `--WfcpFAL7aeMFJQRlySupnw\r
+Content-Type: application/json\r
+Content-Length: ${JSON_PAYLOAD.length}\r
+Connection: close\r
+Transfer-Encoding: chunked\r
+\r
+${JSON_PAYLOAD}\r
+--WfcpFAL7aeMFJQRlySupnw--\r`;
+
 /**
  * @param {Array<Uint8Array>} chunks
  * @return {ReadableStream} a stream which yields chunks.
@@ -139,6 +152,19 @@ describe('multipartStream', function() {
       expect(done).toBe(false);
       expect(value.headers.get('Part2-Header')).toEqual('h2');
       expect(decoder.decode(value.body)).toEqual(PART2);
+    }
+    expect(await r.read()).toEqual({done: true, value: undefined});
+  });
+  it('reads one part with an end marker', async function(){
+    const chunks = [encoder.encode(MULTIPART_EXAMPLE)];
+    const inStream = fakeSuccessfulStream(chunks);
+    const r = multipartStream('multipart/mixed; boundary=WfcpFAL7aeMFJQRlySupnw', inStream)
+        .getReader();
+    {
+      const {done, value} = await r.read();
+      expect(done).toBe(false);
+      expect(value.headers.get('Content-Type')).toEqual('application/json');
+      expect(decoder.decode(value.body)).toEqual(JSON_PAYLOAD);
     }
     expect(await r.read()).toEqual({done: true, value: undefined});
   });

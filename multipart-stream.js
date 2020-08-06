@@ -158,8 +158,13 @@ export default function multipartStream(contentType, body) {
 
       while (true) {
         const {done, value} = await reader.read();
-        const buffered = buf.length - pos;
+        let buffered = buf.length - pos;
         if (done) {
+          const newlines = [10, 13];
+          while (buffered > 0 && newlines.includes(buf[pos])){
+            pos++;
+            buffered--;
+          }
           if (state != STATE_BOUNDARY || buffered > 0) {
             throw Error('multipart stream ended mid-part');
           }
